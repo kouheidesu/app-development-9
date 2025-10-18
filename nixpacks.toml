@@ -1,0 +1,15 @@
+[variables]
+NODE_VERSION = "22"
+NPM_CONFIG_PRODUCTION = "false"
+
+[phases.build]
+commands = [
+  "composer install --no-dev --optimize-autoloader",
+  "npm ci",
+  "npm run build",
+  "ls -la public/build/",
+  "cat public/build/manifest.json"
+]
+
+[start]
+cmd = "sh -c 'php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}'"
