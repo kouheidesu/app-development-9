@@ -7,27 +7,34 @@ Railwayのダッシュボード > Variables タブで以下を設定してくだ
 ```
 APP_NAME=blog-assistant-app
 APP_ENV=production
-APP_KEY=base64:（以下のコマンドで生成）
+APP_KEY=base64:Fzsr1Gxs+FuzdOVZt3uSCATLtjajuYViMQlsuVWdDaQ=
 APP_DEBUG=false
 APP_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}
 ASSET_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}
-DB_CONNECTION=sqlite
+
+DB_CONNECTION=pgsql
+DB_HOST=switchback.proxy.rlwy.net
+DB_PORT=54074
+DB_DATABASE=railway
+DB_USERNAME=postgres
+DB_PASSWORD=xwUyXNZXvhFplvOlDjWgcYIYIZBjATpv
+
 LOG_CHANNEL=stack
 SESSION_DRIVER=database
 CACHE_STORE=database
 QUEUE_CONNECTION=database
 ```
 
-## 🔑 APP_KEYの生成
+## 🔑 APP_KEYについて
 
-ローカルで以下のコマンドを実行してAPP_KEYを生成：
+既に生成済み: `base64:Fzsr1Gxs+FuzdOVZt3uSCATLtjajuYViMQlsuVWdDaQ=`
+
+新たに生成する場合は以下のコマンドを実行：
 
 ```bash
 cd /Users/kajiharakouhei/program/blog-assistant-app
 php artisan key:generate --show
 ```
-
-出力された値（例: `base64:xxxxx...`）をRailwayの`APP_KEY`に設定してください。
 
 ## ⚠️ 重要なポイント
 

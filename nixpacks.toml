@@ -1,15 +1,19 @@
 [variables]
 NODE_VERSION = "22"
-NPM_CONFIG_PRODUCTION = "false"
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "php83", "php83Packages.composer"]
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --optimize-autoloader --no-interaction",
+  "npm ci"
+]
 
 [phases.build]
-commands = [
-  "composer install --no-dev --optimize-autoloader",
-  "npm ci",
-  "npm run build",
-  "ls -la public/build/",
-  "cat public/build/manifest.json"
+cmds = [
+  "npm run build"
 ]
 
 [start]
-cmd = "sh -c 'php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}'"
+cmd = "php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"
