@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Str;
 
+// Explicitly unset DATABASE_URL to prevent Railway from interfering
+putenv('DATABASE_URL');
+putenv('DB_URL');
+$_ENV['DATABASE_URL'] = null;
+$_ENV['DB_URL'] = null;
+$_SERVER['DATABASE_URL'] = null;
+$_SERVER['DB_URL'] = null;
+
 return [
 
     /*
@@ -83,11 +91,11 @@ return [
         'pgsql' => [
             'driver' => 'pgsql',
             'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
+            'port' => (int) env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
