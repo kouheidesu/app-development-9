@@ -16,13 +16,6 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->timestamps();
         });
-
-        // Pivot table for article_tag many-to-many relationship
-        Schema::create('article_tag', function (Blueprint $table) {
-            $table->foreignId('article_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
-            $table->primary(['article_id', 'tag_id']);
-        });
     }
 
     /**
@@ -30,7 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('article_tag');
         Schema::dropIfExists('tags');
     }
 };
