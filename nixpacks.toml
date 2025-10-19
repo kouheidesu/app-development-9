@@ -1,5 +1,8 @@
 [phases.install]
-cmds = ["composer install --optimize-autoloader --no-interaction"]
+cmds = [
+  "cp .env.example .env || true",
+  "composer install --optimize-autoloader --no-interaction"
+]
 
 [phases.build]
 cmds = ["npm install", "npm run build"]
