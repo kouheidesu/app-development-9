@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog Assistant - 記事作成管理</title>
+    <!-- viteを使うところを指定している -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
     <!-- Success Message -->
     @if(session('success'))
@@ -16,6 +19,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
                 </svg>
             </div>
+            <!-- successの値を一時的に取得 -->
             <p class="text-sm font-medium text-slate-700">{{ session('success') }}</p>
         </div>
     </div>
@@ -33,6 +37,7 @@
                 </div>
                 <div class="bg-white rounded-full px-4 py-2 shadow-sm border border-slate-200">
                     <span class="text-sm font-semibold text-slate-600">記事数: </span>
+                    <!-- articles変数の値でcountメソッドを実行 -->
                     <span class="text-sm font-bold text-indigo-600">{{ $articles->count() }}</span>
                 </div>
             </div>
@@ -48,7 +53,7 @@
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1">タイトル *</label>
                             <input type="text" name="title" required
-                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm">
+                                class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1">ステータス</label>
@@ -63,6 +68,7 @@
                             <label class="block text-sm font-semibold text-slate-700 mb-1">カテゴリ</label>
                             <select name="category_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm">
                                 <option value="">未選択</option>
+                                <!-- categories配列の中身分繰り返す -->
                                 @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                 @endforeach
@@ -75,10 +81,10 @@
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1">メモ</label>
                             <textarea name="notes" rows="2" placeholder="アイデア、参考リンクなど..."
-                                      class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm resize-none"></textarea>
+                                class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm resize-none"></textarea>
                         </div>
                         <button type="submit"
-                                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md">
+                            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md">
                             記事を作成
                         </button>
                     </form>
@@ -154,4 +160,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
+
 </html>
