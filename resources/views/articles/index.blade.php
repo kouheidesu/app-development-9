@@ -93,6 +93,7 @@
 
             <!-- Main Content - Articles List -->
             <div class="lg:col-span-2 space-y-4">
+                <!-- articlesの配列の値を全て繰り返して処理する -->
                 @forelse($articles as $article)
                 <div class="bg-white rounded-xl shadow-md border border-slate-200 p-5 hover:shadow-lg transition-all">
                     <div class="flex items-start justify-between mb-3">
@@ -118,15 +119,22 @@
                                 <span class="text-xs text-slate-400">{{ $article->created_at->format('m/d') }}</span>
                             </div>
                         </div>
-                        <form action="{{ route('articles.destroy', $article) }}" method="POST" onsubmit="return confirm('削除しますか？')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition">
+                        <div class="flex gap-2">
+                            <button onclick="openEditModal({{ $article->id }})" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </button>
-                        </form>
+                            <form action="{{ route('articles.destroy', $article) }}" method="POST" onsubmit="return confirm('削除しますか？')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                     @if($article->content)
@@ -147,6 +155,7 @@
                     </div>
                     @endif
                 </div>
+                <!-- 値がからの場合は以下処理を実行 -->
                 @empty
                 <div class="text-center py-16">
                     <div class="text-6xl mb-4">📝</div>
@@ -158,6 +167,110 @@
         </div>
     </div>
 
+    <!-- 編集モーダル -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold text-slate-800">✏️ 記事を編集</h2>
+                <button onclick="closeEditModal()" class="p-2 hover:bg-slate-100 rounded-lg transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="editForm" method="POST" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">タイトル *</label>
+                    <input type="text" name="title" id="edit_title" required
+                        class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">ステータス</label>
+                    <select name="status" id="edit_status" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm">
+                        <option value="draft">📋 下書き</option>
+                        <option value="in_progress">✏️ 執筆中</option>
+                        <option value="ready">✅ 公開準備</option>
+                        <option value="published">🚀 公開済み</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">カテゴリ</label>
+                    <select name="category_id" id="edit_category_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm">
+                        <option value="">未選択</option>
+                        @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">本文</label>
+                    <textarea name="content" id="edit_content" rows="6" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">メモ</label>
+                    <textarea name="notes" id="edit_notes" rows="3" placeholder="アイデア、参考リンクなど..."
+                        class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm resize-none"></textarea>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                        class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md">
+                        更新する
+                    </button>
+                    <button type="button" onclick="closeEditModal()"
+                        class="px-6 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg hover:bg-slate-300 transition-all">
+                        キャンセル
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 記事データをJavaScriptで使えるように -->
+    <script>
+        const articles = @json($articles);
+
+        function openEditModal(articleId) {
+            const article = articles.find(a => a.id === articleId);
+            if (!article) return;
+
+            // フォームのaction属性を設定
+            document.getElementById('editForm').action = `/articles/${articleId}`;
+
+            // フォームの各フィールドに値を設定
+            document.getElementById('edit_title').value = article.title || '';
+            document.getElementById('edit_status').value = article.status || 'draft';
+            document.getElementById('edit_category_id').value = article.category_id || '';
+            document.getElementById('edit_content').value = article.content || '';
+            document.getElementById('edit_notes').value = article.notes || '';
+
+            // モーダルを表示
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        }
+
+        // Escキーでモーダルを閉じる
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
+
+        // モーダル外クリックで閉じる
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
+
+    <!-- cdn.min.js使用するため -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 

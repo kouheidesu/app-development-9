@@ -62,12 +62,19 @@ class ArticleController extends Controller
     {
         // $validated変数に$request変数の値でvalidateした結果を入れる
         $validated = $request->validate([
+            // titleカラムの条件は、必須、文字列、最大255文字まで
             'title' => 'required|string|max:255',
+            // contentカラムの条件はnullok、文字列
             'content' => 'nullable|string',
+            // statusカラムの条件は必須、？、？、？、？
             'status' => 'required|in:draft,in_progress,ready,published',
+            // category_idカラムの条件はnullでok、categoriesかidが存在している必要がある？
             'category_id' => 'nullable|exists:categories,id',
+            // notesカラムの条件はnullでok、文字列型
             'notes' => 'nullable|string',
+            // target_publish_dateカラムの条件はnullでok、日付型
             'target_publish_date' => 'nullable|date',
+            // tagsカラムの条件はnullでok、配列型
             'tags' => 'nullable|array',
         ]);
 
@@ -79,12 +86,15 @@ class ArticleController extends Controller
             $article->tags()->sync($request->tags);
         }
 
+        // urlがarticles.indexにリダイレクトし、成功すれば"記事が更新されました"と表示する
         return redirect()->route('articles.index')->with('success', '記事が更新されました！');
     }
-
+    // destroyメソッド宣言 パラメータはArticleクラスのarticle変数？
     public function destroy(Article $article)
     {
+        // article変数を削除
         $article->delete();
+        // urlがarticles.indexにリダイレクトし、成功すれば"記事が削除されました！"と表示する
         return redirect()->route('articles.index')->with('success', '記事が削除されました！');
     }
 }
