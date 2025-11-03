@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blog Assistant - 記事作成管理</title>
-    <!-- viteを使うところを指定している -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
         /* スマホでの入力時のズーム防止 */
         input, textarea, select {
@@ -24,6 +26,14 @@
             .modal-content {
                 max-height: calc(100dvh - 2rem);
             }
+        }
+
+        /* テキストの切り詰め */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 </head>
