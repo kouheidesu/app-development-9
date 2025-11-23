@@ -12,6 +12,7 @@ class Article extends Model
         'content',
         'status',
         'category_id',
+        'table_of_contents',
         'notes',
         'seo_title',
         'seo_description',

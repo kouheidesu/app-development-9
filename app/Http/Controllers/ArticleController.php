@@ -40,8 +40,16 @@ class ArticleController extends Controller
             'status' => 'required|in:draft,in_progress,ready,published',
             // category_idカラムは必須、存在する、idで？
             'category_id' => 'nullable|exists:categories,id',
+            // table_of_contentsカラムは値なしok、文字型
+            'table_of_contents' => 'nullable|string',
             // notesカラムは値なしok、文字型
             'notes' => 'nullable|string',
+            // seo_titleカラムは値なしok、文字型
+            'seo_title' => 'nullable|string|max:255',
+            // seo_descriptionカラムは値なしok、文字型
+            'seo_description' => 'nullable|string',
+            // featured_imageカラムは値なしok、URL型
+            'featured_image' => 'nullable|url',
             // target_publish_dateカラムは値なしok、日付型
             'target_publish_date' => 'nullable|date',
             // tagsカラムは値なしok、配列
@@ -70,8 +78,16 @@ class ArticleController extends Controller
             'status' => 'required|in:draft,in_progress,ready,published',
             // category_idカラムの条件はnullでok、categoriesかidが存在している必要がある？
             'category_id' => 'nullable|exists:categories,id',
+            // table_of_contentsカラムの条件はnullでok、文字列型
+            'table_of_contents' => 'nullable|string',
             // notesカラムの条件はnullでok、文字列型
             'notes' => 'nullable|string',
+            // seo_titleカラムの条件はnullでok、文字列型
+            'seo_title' => 'nullable|string|max:255',
+            // seo_descriptionカラムの条件はnullでok、文字列型
+            'seo_description' => 'nullable|string',
+            // featured_imageカラムの条件はnullでok、URL型
+            'featured_image' => 'nullable|url',
             // target_publish_dateカラムの条件はnullでok、日付型
             'target_publish_date' => 'nullable|date',
             // tagsカラムの条件はnullでok、配列型
