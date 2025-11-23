@@ -156,8 +156,11 @@
                         @csrf
                         <div>
                             <label class="block font-semibold text-slate-700 mb-2">タイトル *</label>
-                            <input type="text" name="title" required
-                                class="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
+                            <input type="text" name="title" id="create_title" required
+                                class="char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
+                            <div class="text-sm text-slate-500 mt-1 text-right">
+                                <span id="create_title_count">0</span>文字
+                            </div>
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-2">ステータス</label>
@@ -184,17 +187,26 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-2">目次</label>
-                            <textarea name="table_of_contents" rows="2" placeholder="記事の目次を入力..."
-                                class="fullscreen-target w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                            <textarea name="table_of_contents" id="create_table_of_contents" rows="2" placeholder="記事の目次を入力..."
+                                class="fullscreen-target char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                            <div class="text-sm text-slate-500 mt-1 text-right">
+                                <span id="create_table_of_contents_count">0</span>文字
+                            </div>
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-2">本文</label>
-                            <textarea name="content" rows="4" class="fullscreen-target w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none resize-none"></textarea>
+                            <textarea name="content" id="create_content" rows="4" class="fullscreen-target char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none resize-none"></textarea>
+                            <div class="text-sm text-slate-500 mt-1 text-right">
+                                <span id="create_content_count">0</span>文字
+                            </div>
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-2">メモ</label>
-                            <textarea name="notes" rows="2" placeholder="アイデア、参考リンクなど..."
-                                class="fullscreen-target w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                            <textarea name="notes" id="create_notes" rows="2" placeholder="アイデア、参考リンクなど..."
+                                class="fullscreen-target char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                            <div class="text-sm text-slate-500 mt-1 text-right">
+                                <span id="create_notes_count">0</span>文字
+                            </div>
                         </div>
                         <button type="submit"
                             class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md text-lg">
@@ -304,7 +316,10 @@
                 <div>
                     <label class="block font-semibold text-slate-700 mb-2">タイトル *</label>
                     <input type="text" name="title" id="edit_title" required
-                        class="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
+                        class="char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
+                    <div class="text-sm text-slate-500 mt-1 text-right">
+                        <span id="edit_title_count">0</span>文字
+                    </div>
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-2">ステータス</label>
@@ -327,16 +342,25 @@
                 <div>
                     <label class="block font-semibold text-slate-700 mb-2">目次</label>
                     <textarea name="table_of_contents" id="edit_table_of_contents" rows="2" placeholder="記事の目次を入力..."
-                        class="fullscreen-target w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                        class="fullscreen-target char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                    <div class="text-sm text-slate-500 mt-1 text-right">
+                        <span id="edit_table_of_contents_count">0</span>文字
+                    </div>
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-2">本文</label>
-                    <textarea name="content" id="edit_content" rows="6" class="fullscreen-target w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none resize-none"></textarea>
+                    <textarea name="content" id="edit_content" rows="6" class="fullscreen-target char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none resize-none"></textarea>
+                    <div class="text-sm text-slate-500 mt-1 text-right">
+                        <span id="edit_content_count">0</span>文字
+                    </div>
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-2">メモ</label>
                     <textarea name="notes" id="edit_notes" rows="3" placeholder="アイデア、参考リンクなど..."
-                        class="fullscreen-target w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                        class="fullscreen-target char-count-input w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none resize-none"></textarea>
+                    <div class="text-sm text-slate-500 mt-1 text-right">
+                        <span id="edit_notes_count">0</span>文字
+                    </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 pt-4">
                     <button type="submit"
@@ -374,12 +398,28 @@
             document.getElementById('edit_content').value = article.content || '';
             document.getElementById('edit_notes').value = article.notes || '';
 
+            // 文字数カウントを更新
+            updateCharCount('edit_title');
+            updateCharCount('edit_table_of_contents');
+            updateCharCount('edit_content');
+            updateCharCount('edit_notes');
+
             // モーダルを表示
             document.getElementById('editModal').classList.remove('hidden');
             document.getElementById('editModal').classList.add('flex');
 
             // 背景のスクロールを防ぐ
             document.body.style.overflow = 'hidden';
+        }
+
+        // 文字数カウント関数
+        function updateCharCount(inputId) {
+            const input = document.getElementById(inputId);
+            const countSpan = document.getElementById(inputId + '_count');
+            if (input && countSpan) {
+                const count = input.value.length;
+                countSpan.textContent = count;
+            }
         }
 
         function closeEditModal() {
@@ -416,10 +456,20 @@
             clone.value = element.value;
             clone.id = element.id + '_fullscreen';
 
+            // 文字数表示要素を作成
+            const charCountDiv = document.createElement('div');
+            charCountDiv.className = 'text-sm text-slate-500 mt-2 text-right';
+            const charCountSpan = document.createElement('span');
+            charCountSpan.id = clone.id + '_count';
+            charCountSpan.textContent = element.value.length;
+            charCountDiv.appendChild(charCountSpan);
+            charCountDiv.appendChild(document.createTextNode('文字'));
+
             // コンテナに追加
             const container = document.getElementById('fullscreenInputContainer');
             container.innerHTML = '';
             container.appendChild(clone);
+            container.appendChild(charCountDiv);
 
             // モーダルを表示
             document.getElementById('fullscreenInputModal').classList.add('active');
@@ -428,9 +478,13 @@
             // フォーカス
             setTimeout(() => clone.focus(), 100);
 
-            // 入力値を同期
+            // 入力値を同期＆文字数更新
             clone.addEventListener('input', function() {
                 element.value = clone.value;
+                // 元のフィールドの文字数も更新
+                updateCharCount(element.id);
+                // 全画面モーダル内の文字数も更新
+                charCountSpan.textContent = clone.value.length;
             });
         }
 
@@ -453,6 +507,18 @@
                 // フォーカス時に全画面表示
                 input.addEventListener('focus', function(e) {
                     openFullscreenInput(this);
+                });
+            });
+
+            // 文字数カウント機能を全ての入力フィールドに追加
+            const charCountInputs = document.querySelectorAll('.char-count-input');
+            charCountInputs.forEach(input => {
+                // 初期値の文字数を表示
+                updateCharCount(input.id);
+
+                // input イベントで文字数を更新
+                input.addEventListener('input', function() {
+                    updateCharCount(this.id);
                 });
             });
         });
