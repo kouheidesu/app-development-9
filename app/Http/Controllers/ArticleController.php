@@ -12,9 +12,10 @@ class ArticleController extends Controller
     // indexメソッド
     public function index()
     {
-        // articles変数の中にcategoryDBのtagsテーブルから取ってくる？
-        $articles = Article::with(['category', 'tags'])
-            // created_atカラムを昇順表示する
+        // ログインユーザーの記事のみ取得
+        $articles = Article::where('user_id', auth()->id())
+            ->with(['category', 'tags'])
+            // created_atカラムを降順表示する
             ->orderBy('created_at', 'desc')
             // 取得する
             ->get();
@@ -55,6 +56,10 @@ class ArticleController extends Controller
             // tagsカラムは値なしok、配列
             'tags' => 'nullable|array',
         ]);
+
+        // ログインユーザーのIDを追加
+        $validated['user_id'] = auth()->id();
+
         // $articleにcreate関数の結果を入れる
         $article = Article::create($validated);
         // もし$requestがtagsカラムを持つなら$article変数tagsメソッドの結果でsysncメソッドを実行する
@@ -68,6 +73,11 @@ class ArticleController extends Controller
     // updateメソッドを定義。それぞれのパラメータを設定している
     public function update(Request $request, Article $article)
     {
+        // 自分の記事のみ更新可能
+        if ($article->user_id !== auth()->id()) {
+            abort(403, 'この記事を編集する権限がありません');
+        }
+
         // $validated変数に$request変数の値でvalidateした結果を入れる
         $validated = $request->validate([
             // titleカラムの条件は、必須、文字列、最大255文字まで
@@ -108,6 +118,11 @@ class ArticleController extends Controller
     // destroyメソッド宣言 パラメータはArticleクラスのarticle変数？
     public function destroy(Article $article)
     {
+        // 自分の記事のみ削除可能
+        if ($article->user_id !== auth()->id()) {
+            abort(403, 'この記事を削除する権限がありません');
+        }
+
         // article変数を削除
         $article->delete();
         // urlがarticles.indexにリダイレクトし、成功すれば"記事が削除されました！"と表示する

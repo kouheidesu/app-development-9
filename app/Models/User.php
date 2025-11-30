@@ -50,4 +50,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // リレーション
+    public function articles()
+    {
+        return $this->hasMany(Article::class);
+    }
 }

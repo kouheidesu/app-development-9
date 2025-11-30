@@ -8,6 +8,7 @@ class Article extends Model
 {
     // Modelクラス内しか使用できない変数、fillableを定義
     protected $fillable = [
+        'user_id',
         'title',
         'content',
         'status',
@@ -27,6 +28,11 @@ class Article extends Model
     ];
 
     // リレーション
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function category()
     {
         // このクラスのbelongsToメソッドを実行？パラメータはCategoryのclass？

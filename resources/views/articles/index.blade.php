@@ -132,17 +132,31 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header -->
         <header class="mb-8">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 class="text-4xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         ✍️ Blog Assistant
                     </h1>
                     <p class="text-slate-600 mt-1">ブログ記事の作成を効率化</p>
                 </div>
-                <div class="bg-white rounded-full px-4 py-2 shadow-sm border border-slate-200">
-                    <span class="text-sm font-semibold text-slate-600">記事数: </span>
-                    <!-- articles変数の値でcountメソッドを実行 -->
-                    <span class="text-sm font-bold text-indigo-600">{{ $articles->count() }}</span>
+                <div class="flex items-center gap-3">
+                    <div class="bg-white rounded-full px-4 py-2 shadow-sm border border-slate-200">
+                        <span class="text-sm font-semibold text-slate-600">記事数: </span>
+                        <!-- articles変数の値でcountメソッドを実行 -->
+                        <span class="text-sm font-bold text-indigo-600">{{ $articles->count() }}</span>
+                    </div>
+                    <div class="bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span class="text-sm font-semibold text-slate-700">{{ auth()->user()->name }}</span>
+                    </div>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm transition text-sm">
+                            ログアウト
+                        </button>
+                    </form>
                 </div>
             </div>
         </header>
