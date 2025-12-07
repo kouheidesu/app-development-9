@@ -34,16 +34,27 @@
             font-size: 18px !important;
         }
 
-        /* モーダルのスクロール対応 */
+        /* 編集モーダルを常に全画面で表示 */
         .modal-content {
-            max-height: calc(100vh - 2rem);
+            width: 100%;
+            max-width: none;
+            height: 100vh;
+            max-height: 100vh;
+            border-radius: 0;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         /* iOS Safariでのビューポート高さ対応 */
         @supports (-webkit-touch-callout: none) {
             .modal-content {
-                max-height: calc(100dvh - 2rem);
+                height: 100dvh;
+                max-height: 100dvh;
+            }
+
+            .fullscreen-input-modal {
+                height: 100dvh;
             }
         }
 
@@ -66,6 +77,8 @@
         /* 全画面入力モーダル */
         .fullscreen-input-modal {
             display: none;
+            width: 100vw;
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
@@ -82,17 +95,27 @@
             flex-direction: column;
         }
 
+        #fullscreenInputContainer {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
         .fullscreen-input-modal input,
         .fullscreen-input-modal textarea,
         .fullscreen-input-modal select {
             font-size: 20px !important;
             min-height: 56px !important;
             padding: 1rem !important;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .fullscreen-input-modal textarea {
             flex: 1;
-            min-height: 300px !important;
+            min-height: 0 !important;
+            height: 100%;
         }
     </style>
 </head>
@@ -314,9 +337,9 @@
     </div>
 
     <!-- 編集モーダル -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full modal-content">
-            <div class="sticky top-0 bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-stretch justify-center z-50 p-0">
+        <div class="bg-white shadow-2xl w-full modal-content">
+            <div class="sticky top-0 bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex items-center justify-between z-10">
                 <h2 class="text-lg sm:text-xl font-bold text-slate-800">✏️ 記事を編集</h2>
                 <button type="button" onclick="closeEditModal()" class="p-2 hover:bg-slate-100 rounded-lg transition">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
