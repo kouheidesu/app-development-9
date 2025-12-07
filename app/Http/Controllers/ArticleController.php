@@ -123,9 +123,7 @@ class ArticleController extends Controller
             abort(403, 'この記事を削除する権限がありません');
         }
 
-        // article変数を削除
         $article->delete();
-        // urlがarticles.indexにリダイレクトし、成功すれば"記事が削除されました！"と表示する
         return redirect()->route('articles.index')->with('success', '記事が削除されました！');
     }
 }
