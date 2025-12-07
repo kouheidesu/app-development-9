@@ -203,8 +203,7 @@
                             <label class="block font-semibold text-slate-700 mb-2">ステータス</label>
                             <select name="status" class="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none">
                                 <option value="draft">📋 下書き</option>
-                                <option value="in_progress">✏️ 執筆中</option>
-                                <option value="ready">✅ 公開準備</option>
+
                                 <option value="published">🚀 公開済み</option>
                             </select>
                         </div>
@@ -272,8 +271,7 @@
                                        ($article->status === 'ready' ? 'bg-blue-100 text-blue-700' :
                                        ($article->status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-700')) }}">
                                     {{ $article->status === 'published' ? '🚀 公開済み' :'📋 下書き'}}
-                                    <!-- ($article->status === 'ready' ? '✅ 準備完了' :
-                                       ($article->status === 'in_progress' ? '✏️ 執筆中' : '📋 下書き')) }} -->
+
                                 </span>
                                 @if($article->word_count > 0)
                                 <span class="text-xs text-slate-500">{{ number_format($article->word_count) }}字</span>
@@ -362,8 +360,7 @@
                     <label class="block font-semibold text-slate-700 mb-2">ステータス</label>
                     <select name="status" id="edit_status" class="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-indigo-500 outline-none">
                         <option value="draft">📋 下書き</option>
-                        <option value="in_progress">✏️ 執筆中</option>
-                        <option value="ready">✅ 公開準備</option>
+
                         <option value="published">🚀 公開済み</option>
                     </select>
                 </div>
