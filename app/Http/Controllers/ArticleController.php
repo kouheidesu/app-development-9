@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 
 class ArticleController extends Controller
 {
-    // indexメソッド
     public function index()
     {
         // ログインユーザーの記事のみ取得

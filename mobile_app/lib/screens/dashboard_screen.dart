@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../blog_app_state.dart';
+import '../models.dart';
+import '../widgets/article_card.dart';
+import '../widgets/article_form.dart';
+
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<BlogAppState>();
+    final user = state.user!;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 900;
+              final content = isWide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: constraints.maxWidth * 0.32,
+                          child: SingleChildScrollView(
+                            child: _FormPanel(state: state),
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: _ArticleList(
+                            state: state,
+                            scrollable: true,
+                          ),
+                        )
+                      ],
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          _FormPanel(state: state),
+                          const SizedBox(height: 24),
+                          _ArticleList(
+                            state: state,
+                            scrollable: false,
+                          ),
+                        ],
+                      ),
+                    );
+              return Column(
+                children: [
+                  _Header(userName: user.name, articleCount: state.articles.length),
+                  const SizedBox(height: 20),
+                  Expanded(child: content),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.userName, required this.articleCount});
+
+  final String userName;
+  final int articleCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.read<BlogAppState>();
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '✍️ Blog Assistant',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF4338CA),
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$userNameさん、おかえりなさい！',
+                    style: const TextStyle(color: Color(0xFF475569)),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '記事数',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: Colors.blueGrey),
+                ),
+                Text(
+                  '$articleCount件',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: Colors.indigo,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                TextButton.icon(
+                  onPressed: state.logout,
+                  icon: const Icon(Icons.logout),
+                  label: const Text('ログアウト'),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FormPanel extends StatelessWidget {
+  const _FormPanel({required this.state});
+
+  final BlogAppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArticleForm(
+      categories: state.categories,
+      tags: state.tags,
+      onSubmit: (draft) {
+        state.createArticle(draft);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('記事を作成しました')),
+        );
+      },
+    );
+  }
+}
+
+class _ArticleList extends StatelessWidget {
+  const _ArticleList({
+    required this.state,
+    required this.scrollable,
+  });
+
+  final BlogAppState state;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final articles = state.articles;
+    if (articles.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: Column(
+          children: const [
+            Icon(Icons.menu_book_outlined, size: 64, color: Colors.blueGrey),
+            SizedBox(height: 12),
+            Text('まだ記事がありません'),
+            Text('左のフォームから作成しましょう'),
+          ],
+        ),
+      );
+    }
+    final cards = List<Widget>.generate(articles.length, (index) {
+      final article = articles[index];
+      final category = state.categoryById(article.categoryId);
+      final tags = state.resolveTags(article.tagIds);
+      return ArticleCard(
+        article: article,
+        category: category,
+        tags: tags,
+        onEdit: () => _openEditor(context, article),
+        onDelete: () => _confirmDelete(context, article.id),
+      );
+    });
+
+    if (scrollable) {
+      return Scrollbar(
+        child: ListView.separated(
+          itemCount: cards.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (context, index) => cards[index],
+        ),
+      );
+    }
+
+    return Column(
+      children: List<Widget>.generate(cards.length * 2 - 1, (i) {
+        if (i.isOdd) return const SizedBox(height: 16);
+        return cards[i ~/ 2];
+      }),
+    );
+  }
+
+  void _openEditor(BuildContext context, Article article) {
+    final state = context.read<BlogAppState>();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 24,
+          ),
+          child: SingleChildScrollView(
+            child: ArticleForm(
+              initialDraft: article.toDraft(),
+              categories: state.categories,
+              tags: state.tags,
+              submitLabel: '更新する',
+              onSubmit: (draft) {
+                state.updateArticle(article.id, draft);
+                Navigator.of(ctx).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('記事を更新しました')),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String articleId) {
+    final state = context.read<BlogAppState>();
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('削除しますか？'),
+        content: const Text('この記事を完全に削除します。よろしいですか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () {
+              state.deleteArticle(articleId);
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('記事を削除しました')),
+              );
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+  }
+}
