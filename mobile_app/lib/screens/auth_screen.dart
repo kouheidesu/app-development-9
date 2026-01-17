@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../blog_app_state.dart';
+import '../services/api_client.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -29,22 +30,34 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 450));
     final auth = context.read<BlogAppState>();
-    if (_isLogin) {
-      auth.login(
-        email: _emailController.text,
-        password: _passwordController.text,
+    try {
+      if (_isLogin) {
+        await auth.login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      } else {
+        await auth.register(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
       );
-    } else {
-      auth.register(
-        name: _nameController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('通信エラーが発生しました')),
       );
-    }
-    if (mounted) {
-      setState(() => _isSubmitting = false);
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 

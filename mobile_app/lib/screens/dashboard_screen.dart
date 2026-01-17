@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../blog_app_state.dart';
 import '../models.dart';
+import '../services/api_client.dart';
 import '../widgets/article_card.dart';
 import '../widgets/article_form.dart';
+import '../widgets/category_manager.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -55,6 +57,14 @@ class DashboardScreen extends StatelessWidget {
               return Column(
                 children: [
                   _Header(userName: user.name, articleCount: state.articles.length),
+                  if (state.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 12),
+                      child: LinearProgressIndicator(
+                        minHeight: 4,
+                        backgroundColor: Colors.transparent,
+                      ),
+                    ),
                   const SizedBox(height: 20),
                   Expanded(child: content),
                 ],
@@ -120,7 +130,7 @@ class _Header extends StatelessWidget {
                       ),
                 ),
                 TextButton.icon(
-                  onPressed: state.logout,
+                  onPressed: () => state.logout(),
                   icon: const Icon(Icons.logout),
                   label: const Text('ログアウト'),
                 ),
@@ -140,15 +150,52 @@ class _FormPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ArticleForm(
-      categories: state.categories,
-      tags: state.tags,
-      onSubmit: (draft) {
-        state.createArticle(draft);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('記事を作成しました')),
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ArticleForm(
+          categories: state.categories,
+          onSubmit: (draft) async {
+            try {
+              await state.createArticle(draft);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('記事を作成しました')),
+                );
+              }
+            } on ApiException catch (error) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error.message)),
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+        CategoryManager(
+          categories: state.categories,
+          onCreate: (name) async {
+            try {
+              await state.addCategory(name);
+            } on ApiException catch (error) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error.message)),
+              );
+            }
+          },
+          onDelete: (categoryId) async {
+            try {
+              await state.deleteCategory(categoryId);
+            } on ApiException catch (error) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error.message)),
+              );
+            }
+          },
+        ),
+      ],
     );
   }
 }
@@ -181,11 +228,9 @@ class _ArticleList extends StatelessWidget {
     final cards = List<Widget>.generate(articles.length, (index) {
       final article = articles[index];
       final category = state.categoryById(article.categoryId);
-      final tags = state.resolveTags(article.tagIds);
       return ArticleCard(
         article: article,
         category: category,
-        tags: tags,
         onEdit: () => _openEditor(context, article),
         onDelete: () => _confirmDelete(context, article.id),
       );
@@ -195,7 +240,7 @@ class _ArticleList extends StatelessWidget {
       return Scrollbar(
         child: ListView.separated(
           itemCount: cards.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (context, _) => const SizedBox(height: 16),
           itemBuilder: (context, index) => cards[index],
         ),
       );
@@ -226,14 +271,22 @@ class _ArticleList extends StatelessWidget {
             child: ArticleForm(
               initialDraft: article.toDraft(),
               categories: state.categories,
-              tags: state.tags,
               submitLabel: '更新する',
-              onSubmit: (draft) {
-                state.updateArticle(article.id, draft);
-                Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('記事を更新しました')),
-                );
+              onSubmit: (draft) async {
+                try {
+                  await state.updateArticle(article.id, draft);
+                  if (context.mounted) {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('記事を更新しました')),
+                    );
+                  }
+                } on ApiException catch (error) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error.message)),
+                  );
+                }
               },
             ),
           ),
@@ -242,7 +295,7 @@ class _ArticleList extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, String articleId) {
+  void _confirmDelete(BuildContext context, int articleId) {
     final state = context.read<BlogAppState>();
     showDialog<void>(
       context: context,
@@ -255,12 +308,21 @@ class _ArticleList extends StatelessWidget {
             child: const Text('キャンセル'),
           ),
           FilledButton(
-            onPressed: () {
-              state.deleteArticle(articleId);
-              Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('記事を削除しました')),
-              );
+            onPressed: () async {
+              try {
+                await state.deleteArticle(articleId);
+                if (context.mounted) {
+                  Navigator.of(ctx).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('記事を削除しました')),
+                  );
+                }
+              } on ApiException catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(error.message)),
+                );
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             child: const Text('削除する'),

@@ -1,21 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 enum ArticleStatus {
   draft(
     label: '📋 下書き',
     color: Color(0xFF94A3B8),
     background: Color(0xFFE2E8F0),
-  ),
-  inProgress(
-    label: '🛠 執筆中',
-    color: Color(0xFFF59E0B),
-    background: Color(0xFFFEF3C7),
-  ),
-  ready(
-    label: '🧩 入稿準備',
-    color: Color(0xFF2563EB),
-    background: Color(0xFFDBEAFE),
   ),
   published(
     label: '🚀 公開済み',
@@ -42,26 +31,37 @@ enum ArticleStatus {
 }
 
 class BlogUser {
-  const BlogUser({required this.id, required this.name, required this.email});
+  const BlogUser({
+    required this.id,
+    required this.name,
+    required this.email,
+  });
 
-  final String id;
+  final int id;
   final String name;
   final String email;
+
+  factory BlogUser.fromJson(Map<String, dynamic> json) => BlogUser(
+        id: json['id'] as int,
+        name: json['name'] as String? ?? '',
+        email: json['email'] as String? ?? '',
+      );
 }
 
 class Category {
   const Category({required this.id, required this.name, required this.color});
 
-  final String id;
+  final int id;
   final String name;
   final Color color;
-}
 
-class Tag {
-  const Tag({required this.id, required this.name});
-
-  final String id;
-  final String name;
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'] as int,
+      name: json['name'] as String? ?? '',
+      color: _colorFromHex(json['color'] as String? ?? '#6366f1'),
+    );
+  }
 }
 
 class ArticleDraft {
@@ -75,34 +75,28 @@ class ArticleDraft {
     this.notes = '',
     this.seoTitle = '',
     this.seoDescription = '',
-    this.featuredImage = '',
-    List<String>? tagIds,
-  }) : tagIds = tagIds ?? <String>[];
+  });
 
-  final String? id;
+  final int? id;
   String title;
   String content;
   ArticleStatus status;
-  String? categoryId;
+  int? categoryId;
   String tableOfContents;
   String notes;
   String seoTitle;
   String seoDescription;
-  String featuredImage;
-  final List<String> tagIds;
 
   ArticleDraft copyWith({
-    String? id,
+    int? id,
     String? title,
     String? content,
     ArticleStatus? status,
-    String? categoryId,
+    int? categoryId,
     String? tableOfContents,
     String? notes,
     String? seoTitle,
     String? seoDescription,
-    String? featuredImage,
-    List<String>? tagIds,
   }) {
     return ArticleDraft(
       id: id ?? this.id,
@@ -114,15 +108,26 @@ class ArticleDraft {
       notes: notes ?? this.notes,
       seoTitle: seoTitle ?? this.seoTitle,
       seoDescription: seoDescription ?? this.seoDescription,
-      featuredImage: featuredImage ?? this.featuredImage,
-      tagIds: tagIds ?? List<String>.from(this.tagIds),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'content': content,
+      'status': status.name,
+      'category_id': categoryId,
+      'table_of_contents': tableOfContents,
+      'notes': notes,
+      'seo_title': seoTitle,
+      'seo_description': seoDescription,
+    };
   }
 }
 
 class Article {
   Article({
-    String? id,
+    required this.id,
     required this.userId,
     required this.title,
     required this.status,
@@ -133,43 +138,53 @@ class Article {
     this.notes = '',
     this.seoTitle = '',
     this.seoDescription = '',
-    this.featuredImage = '',
-    List<String>? tagIds,
-  })  : id = id ?? const Uuid().v4(),
-        tagIds = tagIds ?? <String>[];
+  });
 
-  final String id;
-  final String userId;
+  final int id;
+  final int userId;
   String title;
   String content;
   ArticleStatus status;
-  String? categoryId;
+  int? categoryId;
   String tableOfContents;
   String notes;
   String seoTitle;
   String seoDescription;
-  String featuredImage;
-  final List<String> tagIds;
   DateTime createdAt;
 
   int get wordCount => content.trim().isEmpty
       ? 0
       : content
-          .replaceAll(RegExp(r'\\s+'), '')
+          .replaceAll(RegExp(r'\s+'), '')
           .characters
           .length;
+
+  factory Article.fromJson(Map<String, dynamic> json) {
+    return Article(
+      id: json['id'] as int,
+      userId: json['user_id'] as int? ?? 0,
+      title: json['title'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+      status: ArticleStatus.fromValue(json['status'] as String? ?? 'draft'),
+      categoryId: json['category_id'] as int?,
+      tableOfContents: json['table_of_contents'] as String? ?? '',
+      notes: json['notes'] as String? ?? '',
+      seoTitle: json['seo_title'] as String? ?? '',
+      seoDescription: json['seo_description'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
+    );
+  }
 
   Article copyWith({
     String? title,
     String? content,
     ArticleStatus? status,
-    String? categoryId,
+    int? categoryId,
     String? tableOfContents,
     String? notes,
     String? seoTitle,
     String? seoDescription,
-    String? featuredImage,
-    List<String>? tagIds,
   }) {
     return Article(
       id: id,
@@ -182,8 +197,6 @@ class Article {
       notes: notes ?? this.notes,
       seoTitle: seoTitle ?? this.seoTitle,
       seoDescription: seoDescription ?? this.seoDescription,
-      featuredImage: featuredImage ?? this.featuredImage,
-      tagIds: tagIds ?? List<String>.from(this.tagIds),
       createdAt: createdAt,
     );
   }
@@ -198,7 +211,11 @@ class Article {
         notes: notes,
         seoTitle: seoTitle,
         seoDescription: seoDescription,
-        featuredImage: featuredImage,
-        tagIds: List<String>.from(tagIds),
       );
+}
+
+Color _colorFromHex(String hex) {
+  final normalized = hex.replaceFirst('#', '');
+  final value = int.tryParse(normalized, radix: 16) ?? 0x6366f1;
+  return Color(0xFF000000 | value);
 }

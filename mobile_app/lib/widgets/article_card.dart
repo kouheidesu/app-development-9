@@ -7,14 +7,12 @@ class ArticleCard extends StatelessWidget {
     super.key,
     required this.article,
     required this.category,
-    required this.tags,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Article article;
   final Category? category;
-  final List<Tag> tags;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -56,7 +54,7 @@ class ArticleCard extends StatelessWidget {
                               label: Text(category!.name),
                               visualDensity: VisualDensity.compact,
                               backgroundColor:
-                                  category!.color.withOpacity(0.15),
+                                  _withAlpha(category!.color, 0.15),
                               labelStyle: TextStyle(
                                 color: category!.color,
                                 fontWeight: FontWeight.w600,
@@ -142,26 +140,16 @@ class ArticleCard extends StatelessWidget {
                 background: const Color(0xFFFFF7ED),
               ),
             ],
-            if (tags.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 6,
-                runSpacing: -8,
-                children: tags
-                    .map(
-                      (tag) => Chip(
-                        label: Text('#${tag.name}'),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
           ],
         ),
       ),
     );
   }
+}
+
+Color _withAlpha(Color color, double opacity) {
+  final alpha = (opacity * 255).clamp(0, 255).round();
+  return color.withAlpha(alpha);
 }
 
 class _InfoTile extends StatelessWidget {

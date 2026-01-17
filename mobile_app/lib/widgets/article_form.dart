@@ -7,15 +7,13 @@ class ArticleForm extends StatefulWidget {
     super.key,
     this.initialDraft,
     required this.categories,
-    required this.tags,
     required this.onSubmit,
     this.submitLabel = '記事を作成',
   });
 
   final ArticleDraft? initialDraft;
   final List<Category> categories;
-  final List<Tag> tags;
-  final ValueChanged<ArticleDraft> onSubmit;
+  final Future<void> Function(ArticleDraft draft) onSubmit;
   final String submitLabel;
 
   @override
@@ -25,13 +23,13 @@ class ArticleForm extends StatefulWidget {
 class _ArticleFormState extends State<ArticleForm> {
   final _formKey = GlobalKey<FormState>();
   late ArticleDraft _draft;
+  bool _isSubmitting = false;
   late final TextEditingController _titleController;
   late final TextEditingController _tableOfContentsController;
   late final TextEditingController _contentController;
   late final TextEditingController _notesController;
   late final TextEditingController _seoTitleController;
   late final TextEditingController _seoDescriptionController;
-  late final TextEditingController _featuredImageController;
 
   @override
   void initState() {
@@ -45,7 +43,6 @@ class _ArticleFormState extends State<ArticleForm> {
     _seoTitleController = TextEditingController(text: _draft.seoTitle);
     _seoDescriptionController =
         TextEditingController(text: _draft.seoDescription);
-    _featuredImageController = TextEditingController(text: _draft.featuredImage);
   }
 
   @override
@@ -56,43 +53,96 @@ class _ArticleFormState extends State<ArticleForm> {
     _notesController.dispose();
     _seoTitleController.dispose();
     _seoDescriptionController.dispose();
-    _featuredImageController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    final categoryId = _selectedCategoryId;
     final draft = ArticleDraft(
       id: _draft.id,
       title: _titleController.text,
       content: _contentController.text,
       status: _draft.status,
-      categoryId: _draft.categoryId,
+      categoryId: categoryId,
       tableOfContents: _tableOfContentsController.text,
       notes: _notesController.text,
       seoTitle: _seoTitleController.text,
       seoDescription: _seoDescriptionController.text,
-      featuredImage: _featuredImageController.text,
-      tagIds: List<String>.from(_draft.tagIds),
     );
-    widget.onSubmit(draft);
-    if (widget.initialDraft == null) {
-      setState(() {
-        _draft = ArticleDraft();
-        _titleController.clear();
-        _tableOfContentsController.clear();
-        _contentController.clear();
-        _notesController.clear();
-        _seoTitleController.clear();
-        _seoDescriptionController.clear();
-        _featuredImageController.clear();
-      });
+    try {
+      await widget.onSubmit(draft);
+      if (widget.initialDraft == null) {
+        setState(() {
+          _draft = ArticleDraft();
+          _titleController.clear();
+          _tableOfContentsController.clear();
+          _contentController.clear();
+          _notesController.clear();
+          _seoTitleController.clear();
+          _seoDescriptionController.clear();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
+  }
+
+  Future<void> _openFullScreenEditor({
+    required String title,
+    required TextEditingController controller,
+  }) async {
+    FocusScope.of(context).unfocus();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => _FullScreenTextEditor(
+        title: title,
+        controller: controller,
+      ),
+    );
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Widget _buildModalField({
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return _LabeledField(
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _openFullScreenEditor(
+          title: label,
+          controller: controller,
+        ),
+        child: InputDecorator(
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+          child: Text(
+            controller.text.isEmpty ? '未入力' : controller.text,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: controller.text.isEmpty
+                  ? Colors.blueGrey
+                  : const Color(0xFF0F172A),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final selectedCategoryId = _selectedCategoryId;
     return Form(
       key: _formKey,
       child: Column(
@@ -120,7 +170,8 @@ class _ArticleFormState extends State<ArticleForm> {
                 _LabeledField(
                   label: 'ステータス',
                   child: DropdownButtonFormField<ArticleStatus>(
-                    value: _draft.status,
+                    key: ValueKey(_draft.status),
+                    initialValue: _draft.status,
                     decoration: const InputDecoration(border: OutlineInputBorder()),
                     items: ArticleStatus.values
                         .map(
@@ -140,19 +191,18 @@ class _ArticleFormState extends State<ArticleForm> {
                 ),
                 _LabeledField(
                   label: 'カテゴリ',
-                  child: DropdownButtonFormField<String?>(
-                    value: _draft.categoryId?.isEmpty ?? true
-                        ? null
-                        : _draft.categoryId,
+                  child: DropdownButtonFormField<int?>(
+                    key: ValueKey(selectedCategoryId),
+                    initialValue: selectedCategoryId,
                     decoration:
                         const InputDecoration(border: OutlineInputBorder()),
                     items: [
-                      const DropdownMenuItem<String?>(
+                      const DropdownMenuItem<int?>(
                         value: null,
                         child: Text('未選択'),
                       ),
                       ...widget.categories.map(
-                        (cat) => DropdownMenuItem<String?>(
+                        (cat) => DropdownMenuItem<int?>(
                           value: cat.id,
                           child: Text(cat.name),
                         ),
@@ -165,67 +215,24 @@ class _ArticleFormState extends State<ArticleForm> {
                     },
                   ),
                 ),
-                _LabeledField(
-                  label: 'タグ',
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: -8,
-                    children: widget.tags
-                        .map(
-                          (tag) => FilterChip(
-                            label: Text('#${tag.name}'),
-                            selected: _draft.tagIds.contains(tag.id),
-                            onSelected: (selected) {
-                              setState(() {
-                                if (selected) {
-                                  _draft.tagIds.add(tag.id);
-                                } else {
-                                  _draft.tagIds.remove(tag.id);
-                                }
-                              });
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-                _LabeledField(
+                _buildModalField(
                   label: '目次',
-                  child: TextFormField(
-                    controller: _tableOfContentsController,
-                    decoration:
-                        const InputDecoration(border: OutlineInputBorder()),
-                    maxLines: 3,
-                  ),
+                  controller: _tableOfContentsController,
                 ),
-                _LabeledField(
+                _buildModalField(
                   label: '本文',
-                  child: TextFormField(
-                    controller: _contentController,
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      helperText:
-                          '${_contentController.text.characters.length} 文字',
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
+                  controller: _contentController,
                 ),
-                _LabeledField(
+                _buildModalField(
                   label: 'メモ',
-                  child: TextFormField(
-                    controller: _notesController,
-                    decoration:
-                        const InputDecoration(border: OutlineInputBorder()),
-                    maxLines: 3,
-                  ),
+                  controller: _notesController,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
           _Section(
-            title: '🔍 SEO / 画像',
+            title: '🔍 SEO',
             child: Column(
               children: [
                 _LabeledField(
@@ -245,14 +252,6 @@ class _ArticleFormState extends State<ArticleForm> {
                     maxLines: 3,
                   ),
                 ),
-                _LabeledField(
-                  label: 'アイキャッチ画像 URL',
-                  child: TextFormField(
-                    controller: _featuredImageController,
-                    decoration:
-                        const InputDecoration(border: OutlineInputBorder()),
-                  ),
-                ),
               ],
             ),
           ),
@@ -260,8 +259,17 @@ class _ArticleFormState extends State<ArticleForm> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _submit,
-              icon: const Icon(Icons.send),
+              onPressed: _isSubmitting ? null : _submit,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send),
               label: Text(
                 widget.submitLabel,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -277,6 +285,13 @@ class _ArticleFormState extends State<ArticleForm> {
         ],
       ),
     );
+  }
+
+  int? get _selectedCategoryId {
+    final id = _draft.categoryId;
+    if (id == null) return null;
+    final exists = widget.categories.any((cat) => cat.id == id);
+    return exists ? id : null;
   }
 }
 
@@ -298,7 +313,7 @@ class _Section extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             blurRadius: 24,
-            color: Colors.indigo.withOpacity(0.05),
+            color: _withAlpha(Colors.indigo, 0.05),
             offset: const Offset(0, 8),
           )
         ],
@@ -351,4 +366,94 @@ class _LabeledField extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FullScreenTextEditor extends StatelessWidget {
+  const _FullScreenTextEditor({
+    required this.title,
+    required this.controller,
+  });
+
+  final String title;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    return Material(
+      color: Colors.white,
+      child: SizedBox(
+        height: mediaQuery.size.height * 0.95,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: mediaQuery.viewInsets.bottom + 16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.indigo,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  expands: true,
+                  maxLines: null,
+                  minLines: null,
+                  textAlignVertical: TextAlignVertical.top,
+                  textAlign: TextAlign.start,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller,
+                  builder: (context, value, _) {
+                    final count = value.text.characters.length;
+                    return Text(
+                      '$count 文字',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blueGrey,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Color _withAlpha(Color color, double opacity) {
+  final alpha = (opacity * 255).clamp(0, 255).round();
+  return color.withAlpha(alpha);
 }

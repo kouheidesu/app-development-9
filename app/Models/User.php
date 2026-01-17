@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 // Illuminate\Foundation\Auth\UserをAuthenticatableで使用可能にする
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 // Userクラスを拡張しAuthenticatableとして使用する
 class User extends Authenticatable
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'api_token',
     ];
 
     /**
@@ -35,6 +37,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'api_token',
     ];
 
     /**
@@ -55,5 +58,20 @@ class User extends Authenticatable
     public function articles()
     {
         return $this->hasMany(Article::class);
+    }
+
+    public function generateApiToken(): string
+    {
+        $token = Str::random(60);
+        $this->forceFill([
+            'api_token' => hash('sha256', $token),
+        ])->save();
+
+        return $token;
+    }
+
+    public function clearApiToken(): void
+    {
+        $this->forceFill(['api_token' => null])->save();
     }
 }

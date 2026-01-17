@@ -1,137 +1,210 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 import 'models.dart';
-
+import 'services/api_client.dart';
 
 class BlogAppState extends ChangeNotifier {
+  BlogAppState({ApiClient? apiClient})
+      : _apiClient = apiClient ?? ApiClient() {
+    _initialize();
+  }
+
+  final ApiClient _apiClient;
   BlogUser? _user;
   final List<Article> _articles = <Article>[];
-
-  List<Category> categories = const <Category>[
-    Category(id: '1', name: 'SEO', color: Color(0xFF6366F1)),
-    Category(id: '2', name: 'マーケ', color: Color(0xFFF97316)),
-    Category(id: '3', name: 'ノウハウ', color: Color(0xFF0EA5E9)),
-    Category(id: '4', name: 'レビュー', color: Color(0xFF10B981)),
-  ];
-
-  List<Tag> tags = const <Tag>[
-    Tag(id: '1', name: 'AI'),
-    Tag(id: '2', name: 'ライティング'),
-    Tag(id: '3', name: 'WordPress'),
-    Tag(id: '4', name: 'SNS'),
-    Tag(id: '5', name: '集客'),
-  ];
+  List<Category> _categories = <Category>[];
+  bool _isLoading = false;
+  bool _isInitializing = true;
 
   BlogUser? get user => _user;
   List<Article> get articles => List<Article>.unmodifiable(_articles);
-
+  List<Category> get categories => List<Category>.unmodifiable(_categories);
   bool get isAuthenticated => _user != null;
+  bool get isLoading => _isLoading;
+  bool get isInitializing => _isInitializing;
 
-  void register({
+  Future<void> register({
     required String name,
     required String email,
     required String password,
-  }) {
-    // デモ実装なのでパスワードは保持しない
-    _user = BlogUser(
-      id: const Uuid().v4(),
-      name: name.trim().isEmpty ? 'ゲスト' : name.trim(),
-      email: email.trim(),
+  }) async {
+    final response = await _apiClient.register(
+      name: name,
+      email: email,
+      password: password,
     );
-    // 初期データがない場合のみサンプル記事を投入
-    if (_articles.isEmpty) {
-      _seedSampleArticles();
+    await _handleAuthenticatedResponse(response);
+  }
+
+  Future<void> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _apiClient.login(
+      email: email,
+      password: password,
+    );
+    await _handleAuthenticatedResponse(response);
+  }
+
+  Future<void> logout() async {
+    try {
+      await _apiClient.logout();
+    } finally {
+      await _apiClient.clearToken();
+      _clearSession();
+    }
+  }
+
+  Future<void> createArticle(ArticleDraft draft) async {
+    await _ensureAuthenticated();
+    await _withLoading(() async {
+      final response = await _apiClient.createArticle(draft.toJson());
+      final article =
+          Article.fromJson(response['article'] as Map<String, dynamic>);
+      _articles.insert(0, article);
+    });
+  }
+
+  Future<void> updateArticle(int id, ArticleDraft draft) async {
+    await _ensureAuthenticated();
+    await _withLoading(() async {
+      final response = await _apiClient.updateArticle(id, draft.toJson());
+      final updated =
+          Article.fromJson(response['article'] as Map<String, dynamic>);
+      final index = _articles.indexWhere((article) => article.id == id);
+      if (index >= 0) {
+        _articles[index] = updated;
+      } else {
+        _articles.insert(0, updated);
+      }
+    });
+  }
+
+  Future<void> deleteArticle(int id) async {
+    await _ensureAuthenticated();
+    await _withLoading(() async {
+      await _apiClient.deleteArticle(id);
+      _articles.removeWhere((article) => article.id == id);
+    });
+  }
+
+  Future<void> addCategory(String name) async {
+    await _ensureAuthenticated();
+    final response = await _apiClient.createCategory({'name': name});
+    final category =
+        Category.fromJson(response['category'] as Map<String, dynamic>);
+    _categories = <Category>[..._categories, category]
+      ..sort((a, b) => a.name.compareTo(b.name));
+    notifyListeners();
+  }
+
+  Future<void> deleteCategory(int id) async {
+    await _ensureAuthenticated();
+    await _apiClient.deleteCategory(id);
+    _categories = _categories.where((category) => category.id != id).toList();
+    for (final article in _articles) {
+      if (article.categoryId == id) {
+        article.categoryId = null;
+      }
     }
     notifyListeners();
   }
 
-  void login({
-    required String email,
-    required String password,
-  }) {
-    _user = BlogUser(
-      id: const Uuid().v4(),
-      name: email.split('@').first,
-      email: email.trim(),
-    );
-    notifyListeners();
-  }
-
-  void logout() {
-    _user = null;
-    notifyListeners();
-  }
-
-  void createArticle(ArticleDraft draft) {
-    if (_user == null) return;
-    final article = Article(
-      userId: _user!.id,
-      title: draft.title.trim(),
-      content: draft.content.trim(),
-      status: draft.status,
-      categoryId: draft.categoryId,
-      tableOfContents: draft.tableOfContents.trim(),
-      notes: draft.notes.trim(),
-      seoTitle: draft.seoTitle.trim(),
-      seoDescription: draft.seoDescription.trim(),
-      featuredImage: draft.featuredImage.trim(),
-      tagIds: List<String>.from(draft.tagIds),
-      createdAt: DateTime.now(),
-    );
-    _articles.insert(0, article);
-    notifyListeners();
-  }
-
-  void updateArticle(String id, ArticleDraft draft) {
-    final index = _articles.indexWhere((a) => a.id == id);
-    if (index == -1) return;
-    final existing = _articles[index];
-    _articles[index] = existing.copyWith(
-      title: draft.title.trim(),
-      content: draft.content.trim(),
-      status: draft.status,
-      categoryId: draft.categoryId,
-      tableOfContents: draft.tableOfContents.trim(),
-      notes: draft.notes.trim(),
-      seoTitle: draft.seoTitle.trim(),
-      seoDescription: draft.seoDescription.trim(),
-      featuredImage: draft.featuredImage.trim(),
-      tagIds: List<String>.from(draft.tagIds),
-    );
-    notifyListeners();
-  }
-
-  void deleteArticle(String id) {
-    _articles.removeWhere((a) => a.id == id);
-    notifyListeners();
-  }
-
-  Category? categoryById(String? id) {
+  Category? categoryById(int? id) {
     if (id == null) return null;
-    return categories.firstWhere(
-      (c) => c.id == id,
-      orElse: () => Category(id: id, name: '未設定', color: Colors.grey),
-    );
+    try {
+      return _categories.firstWhere((category) => category.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
-  List<Tag> resolveTags(List<String> ids) {
-    return tags.where((t) => ids.contains(t.id)).toList();
+  Future<void> _initialize() async {
+    try {
+      final token = await _apiClient.loadSavedToken();
+      if (token != null) {
+        await _refreshSession();
+      }
+    } catch (_) {
+      await _apiClient.clearToken();
+      _clearSession();
+    } finally {
+      _isInitializing = false;
+      notifyListeners();
+    }
   }
 
-  void _seedSampleArticles() {
-    if (_user == null) return;
-    final draft = Article(
-      userId: _user!.id,
-      title: '2025年版 SEO ライティング完全ガイド',
-      status: ArticleStatus.inProgress,
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      content: '最新のSEOトレンドとライティングの型を整理。E-E-A-T や Helpful Content Update 対応方針も明記する。',
-      categoryId: categories.first.id,
-      tableOfContents: '1. 2025年のSEO概況\\n2. キーワード調査テンプレ\\n3. 構成テンプレート\\n4. 執筆チェックリスト',
-      notes: '事例は自社実績から2本ピックアップ。サムネ案も添付する。',
-      tagIds: <String>['1', '2'],
-    );
-    _articles.add(draft);
+  Future<void> _refreshSession() async {
+    final profile = await _apiClient.fetchProfile();
+    final userJson = profile['user'] as Map<String, dynamic>?;
+    if (userJson == null) return;
+    _user = BlogUser.fromJson(userJson);
+    await _refreshDashboardData();
+  }
+
+  Future<void> _refreshDashboardData() {
+    return _withLoading(() async {
+      await Future.wait<void>([
+        _loadCategories(),
+        _loadArticles(),
+      ]);
+    });
+  }
+
+  Future<void> _loadCategories() async {
+    final response = await _apiClient.fetchCategories();
+    final items = response['categories'] as List<dynamic>? ?? <dynamic>[];
+    _categories = items
+        .map((json) => Category.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> _loadArticles() async {
+    final response = await _apiClient.fetchArticles();
+    final items = response['articles'] as List<dynamic>? ?? <dynamic>[];
+    _articles
+      ..clear()
+      ..addAll(
+        items.map((json) => Article.fromJson(json as Map<String, dynamic>)),
+      );
+  }
+
+  Future<void> _handleAuthenticatedResponse(
+    Map<String, dynamic> response,
+  ) async {
+    final token = response['token'] as String?;
+    final userJson = response['user'] as Map<String, dynamic>?;
+    if (token == null || userJson == null) {
+      throw const ApiException('認証情報の取得に失敗しました');
+    }
+    await _apiClient.persistToken(token);
+    _user = BlogUser.fromJson(userJson);
+    notifyListeners();
+    await _refreshDashboardData();
+  }
+
+  Future<void> _ensureAuthenticated() async {
+    if (_user != null) return;
+    throw const ApiException('この操作を行うにはログインが必要です');
+  }
+
+  void _clearSession() {
+    _user = null;
+    _articles.clear();
+    _categories = <Category>[];
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> _withLoading(Future<void> Function() task) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await task();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

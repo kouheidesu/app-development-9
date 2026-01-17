@@ -5,20 +5,16 @@ import 'blog_app_state.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
 
-// ?
 void main() {
   runApp(const BlogAssistantApp());
 }
 
-// ?
 class BlogAssistantApp extends StatelessWidget {
   const BlogAssistantApp({super.key});
 
-// ?
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        // それぞれのプロパティを設定。あとでプロパティを使うために設定している？
       create: (_) => BlogAppState(),
       child: MaterialApp(
         title: 'Blog Assistant',
@@ -62,6 +58,11 @@ class _AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<BlogAppState>();
+    if (state.isInitializing) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     if (state.isAuthenticated) {
       return const DashboardScreen();
     }
