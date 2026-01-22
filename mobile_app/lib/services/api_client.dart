@@ -14,11 +14,15 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  ApiClient({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+  ApiClient({http.Client? httpClient, String? baseUrl})
+      : _httpClient = httpClient ?? http.Client(),
+        _baseUrl = baseUrl ??
+            const String.fromEnvironment(
+              'API_BASE_URL',
+              defaultValue: 'http://127.0.0.1:8000/api',
+            );
 
-  static const String _baseUrl =
-      'https://app-development-9-production.up.railway.app/api';
+  final String _baseUrl;
   static const String _tokenKey = 'api_token';
 
   final http.Client _httpClient;
