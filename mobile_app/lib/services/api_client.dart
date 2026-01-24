@@ -19,7 +19,8 @@ class ApiClient {
         _baseUrl = baseUrl ??
             const String.fromEnvironment(
               'API_BASE_URL',
-              defaultValue: 'http://127.0.0.1:8000/api',
+              defaultValue:
+                  'https://app-development-9-production.up.railway.app/api',
             );
 
   final String _baseUrl;
