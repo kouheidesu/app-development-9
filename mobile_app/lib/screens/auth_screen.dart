@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../blog_app_state.dart';
 import '../services/api_client.dart';
+import 'privacy_policy_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -15,7 +16,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController(text: 'password');
+  final _passwordController = TextEditingController();
   bool _isLogin = true;
   bool _isSubmitting = false;
 
@@ -179,6 +180,16 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ? 'アカウントをお持ちでない方はこちら'
                                   : 'ログインに切り替える',
                             ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const PrivacyPolicyScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text('プライバシーポリシー'),
                           ),
                         ],
                       ),

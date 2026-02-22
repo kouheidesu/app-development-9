@@ -1,0 +1,4 @@
+storeFile=/absolute/path/to/keystore.jks
+storePassword=change-me
+keyAlias=blogassistant
+keyPassword=change-me

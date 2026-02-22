@@ -111,6 +111,12 @@ class BlogAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAccount() async {
+    await _ensureAuthenticated();
+    await _apiClient.deleteAccount();
+    await logout();
+  }
+
   Category? categoryById(int? id) {
     if (id == null) return null;
     try {
