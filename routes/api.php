@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/status', function () {
+    return response()->json([
+        'service' => 'Blog Assistant API',
+        'environment' => config('app.env'),
+        'version' => trim((string) shell_exec('git rev-parse --short HEAD')) ?: 'unknown',
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
 
 Route::middleware('api.token')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
