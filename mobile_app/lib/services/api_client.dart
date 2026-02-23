@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../environment.dart';
+import 'token_store.dart';
 
 class ApiException implements Exception {
   const ApiException(this.message, {this.statusCode});
@@ -14,42 +16,37 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  ApiClient({http.Client? httpClient, String? baseUrl})
-      : _httpClient = httpClient ?? http.Client(),
-        _baseUrl = baseUrl ??
-            const String.fromEnvironment(
-              'API_BASE_URL',
-              defaultValue:
-                  'https://app-development-9-production.up.railway.app/api',
-            );
+  ApiClient({
+    http.Client? httpClient,
+    String? baseUrl,
+    TokenStore? tokenStore,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _tokenStore = tokenStore ?? SecureTokenStore(),
+        _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
 
   final String _baseUrl;
-  static const String _tokenKey = 'api_token';
 
   final http.Client _httpClient;
-  SharedPreferences? _prefs;
+  final TokenStore _tokenStore;
   String? _token;
 
-  Future<void> _ensurePrefs() async {
-    _prefs ??= await SharedPreferences.getInstance();
-    _token ??= _prefs!.getString(_tokenKey);
+  Future<void> _ensureTokenLoaded() async {
+    _token ??= await _tokenStore.read();
   }
 
   Future<String?> loadSavedToken() async {
-    await _ensurePrefs();
+    await _ensureTokenLoaded();
     return _token;
   }
 
   Future<void> persistToken(String token) async {
-    await _ensurePrefs();
     _token = token;
-    await _prefs!.setString(_tokenKey, token);
+    await _tokenStore.write(token);
   }
 
   Future<void> clearToken() async {
-    await _ensurePrefs();
     _token = null;
-    await _prefs!.remove(_tokenKey);
+    await _tokenStore.delete();
   }
 
   Future<Map<String, dynamic>> login({
@@ -114,6 +111,10 @@ class ApiClient {
     await _delete('/categories/$id');
   }
 
+  Future<void> deleteAccount() async {
+    await _delete('/account');
+  }
+
   Future<Map<String, dynamic>> _get(String path) {
     return _request('GET', path);
   }
@@ -143,7 +144,7 @@ class ApiClient {
     Map<String, dynamic>? body,
     bool auth = true,
   }) async {
-    await _ensurePrefs();
+    await _ensureTokenLoaded();
     final uri = Uri.parse('$_baseUrl$path');
     final headers = <String, String>{
       'Accept': 'application/json',

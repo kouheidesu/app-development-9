@@ -7,6 +7,7 @@ import '../services/api_client.dart';
 import '../widgets/article_card.dart';
 import '../widgets/article_form.dart';
 import '../widgets/category_manager.dart';
+import 'privacy_policy_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -134,12 +135,73 @@ class _Header extends StatelessWidget {
                   icon: const Icon(Icons.logout),
                   label: const Text('ログアウト'),
                 ),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleMenuSelection(value, context),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'policy',
+                      child: Text('プライバシーポリシー'),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text('アカウント削除'),
+                    ),
+                  ],
+                ),
               ],
             )
           ],
         ),
       ),
     );
+  }
+}
+
+Future<void> _handleMenuSelection(String value, BuildContext context) async {
+  switch (value) {
+    case 'policy':
+      if (!context.mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const PrivacyPolicyScreen(),
+        ),
+      );
+      break;
+    case 'delete':
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('アカウント削除'),
+            content: const Text('アカウントとすべての記事を削除します。よろしいですか？'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('キャンセル'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('削除する'),
+              ),
+            ],
+          );
+        },
+      );
+      if (confirmed != true || !context.mounted) return;
+      final state = context.read<BlogAppState>();
+      try {
+        await state.deleteAccount();
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('アカウントを削除しました')),
+        );
+      } on ApiException catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+      break;
   }
 }
 
