@@ -30,7 +30,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           _Section(
             title: '4. お問い合わせ',
             body:
-                'privacy@example.com までお問い合わせください。法令に基づき適切に対応します。',
+                'gyarmex@gmail.com までお問い合わせください。法令に基づき適切に対応します。',
           ),
         ],
       ),

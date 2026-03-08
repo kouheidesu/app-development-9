@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'models.dart';
@@ -10,6 +12,7 @@ class BlogAppState extends ChangeNotifier {
   }
 
   final ApiClient _apiClient;
+  final Completer<void> _initializedCompleter = Completer<void>();
   BlogUser? _user;
   final List<Article> _articles = <Article>[];
   List<Category> _categories = <Category>[];
@@ -22,6 +25,8 @@ class BlogAppState extends ChangeNotifier {
   bool get isAuthenticated => _user != null;
   bool get isLoading => _isLoading;
   bool get isInitializing => _isInitializing;
+  @visibleForTesting
+  Future<void> get initialized => _initializedCompleter.future;
 
   Future<void> register({
     required String name,
@@ -138,6 +143,9 @@ class BlogAppState extends ChangeNotifier {
     } finally {
       _isInitializing = false;
       notifyListeners();
+      if (!_initializedCompleter.isCompleted) {
+        _initializedCompleter.complete();
+      }
     }
   }
 

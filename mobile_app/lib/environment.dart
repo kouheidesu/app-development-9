@@ -6,8 +6,11 @@ enum AppEnvironment {
 class EnvironmentConfig {
   EnvironmentConfig._();
 
+  static const bool _isReleaseBuild =
+      bool.fromEnvironment('dart.vm.product', defaultValue: false);
+
   static const String _envFlag =
-      String.fromEnvironment('APP_ENV', defaultValue: 'development');
+      String.fromEnvironment('APP_ENV', defaultValue: 'auto');
 
   static const String _manualBase =
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
@@ -22,8 +25,13 @@ class EnvironmentConfig {
       case 'production':
       case 'prod':
         return AppEnvironment.production;
-      default:
+      case 'development':
+      case 'dev':
         return AppEnvironment.development;
+      default:
+        return _isReleaseBuild
+            ? AppEnvironment.production
+            : AppEnvironment.development;
     }
   }
 

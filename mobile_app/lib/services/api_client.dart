@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -24,6 +25,7 @@ class ApiClient {
         _tokenStore = tokenStore ?? SecureTokenStore(),
         _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
 
+  static const Duration _requestTimeout = Duration(seconds: 15);
   final String _baseUrl;
 
   final http.Client _httpClient;
@@ -157,23 +159,39 @@ class ApiClient {
     http.Response response;
     final encodedBody = body != null ? jsonEncode(body) : null;
 
-    switch (method) {
-      case 'GET':
-        response = await _httpClient.get(uri, headers: headers);
-        break;
-      case 'POST':
-        response =
-            await _httpClient.post(uri, headers: headers, body: encodedBody);
-        break;
-      case 'PUT':
-        response =
-            await _httpClient.put(uri, headers: headers, body: encodedBody);
-        break;
-      case 'DELETE':
-        response = await _httpClient.delete(uri, headers: headers);
-        break;
-      default:
-        throw ArgumentError('Unsupported method $method');
+    try {
+      switch (method) {
+        case 'GET':
+          response = await _httpClient
+              .get(uri, headers: headers)
+              .timeout(_requestTimeout);
+          break;
+        case 'POST':
+          response = await _httpClient
+              .post(uri, headers: headers, body: encodedBody)
+              .timeout(_requestTimeout);
+          break;
+        case 'PUT':
+          response = await _httpClient
+              .put(uri, headers: headers, body: encodedBody)
+              .timeout(_requestTimeout);
+          break;
+        case 'DELETE':
+          response = await _httpClient
+              .delete(uri, headers: headers)
+              .timeout(_requestTimeout);
+          break;
+        default:
+          throw ArgumentError('Unsupported method $method');
+      }
+    } on TimeoutException {
+      throw const ApiException(
+        '通信がタイムアウトしました。ネットワーク環境を確認して再度お試しください。',
+      );
+    } on Exception {
+      throw const ApiException(
+        '通信エラーが発生しました。時間をおいて再度お試しください。',
+      );
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
