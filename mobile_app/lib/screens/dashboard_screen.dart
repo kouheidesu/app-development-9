@@ -168,40 +168,44 @@ Future<void> _handleMenuSelection(String value, BuildContext context) async {
       );
       break;
     case 'delete':
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) {
-          return AlertDialog(
-            title: const Text('アカウント削除'),
-            content: const Text('アカウントとすべての記事を削除します。よろしいですか？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('削除する'),
-              ),
-            ],
-          );
-        },
-      );
-      if (confirmed != true || !context.mounted) return;
-      final state = context.read<BlogAppState>();
-      try {
-        await state.deleteAccount();
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('アカウントを削除しました')),
-        );
-      } on ApiException catch (error) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
-      }
+      await _confirmAccountDeletion(context);
       break;
+  }
+}
+
+Future<void> _confirmAccountDeletion(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('アカウント削除'),
+        content: const Text('アカウントとすべての記事を削除します。よろしいですか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      );
+    },
+  );
+  if (confirmed != true || !context.mounted) return;
+  final state = context.read<BlogAppState>();
+  try {
+    await state.deleteAccount();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('アカウントを削除しました')),
+    );
+  } on ApiException catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error.message)),
+    );
   }
 }
 
@@ -257,6 +261,8 @@ class _FormPanel extends StatelessWidget {
             }
           },
         ),
+        const SizedBox(height: 16),
+        const _AccountSettingsCard(),
       ],
     );
   }
@@ -388,6 +394,58 @@ class _ArticleList extends StatelessWidget {
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountSettingsCard extends StatelessWidget {
+  const _AccountSettingsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 20,
+            color: Colors.indigo.withOpacity(0.05),
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '⚙️ アカウント設定',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.indigo,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'アカウントと記事データを完全に削除する場合はこちらから操作できます。'
+            '削除後は元に戻せません。',
+            style: TextStyle(color: Colors.blueGrey),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => _confirmAccountDeletion(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            ),
+            icon: const Icon(Icons.warning_amber_rounded),
+            label: const Text('アカウントを削除する'),
           ),
         ],
       ),
