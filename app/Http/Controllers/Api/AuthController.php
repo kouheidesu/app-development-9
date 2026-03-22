@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -68,6 +69,26 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'ログアウトしました',
+        ]);
+    }
+
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'ユーザー情報を取得できませんでした。',
+            ], 404);
+        }
+
+        DB::transaction(function () use ($user) {
+            $user->articles()->delete();
+            $user->delete();
+        });
+
+        return response()->json([
+            'message' => 'アカウントを削除しました',
         ]);
     }
 
