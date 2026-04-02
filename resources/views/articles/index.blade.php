@@ -162,7 +162,7 @@
                     </h1>
                     <p class="text-slate-600 mt-1">ブログ記事の作成を効率化</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 flex-wrap justify-end">
                     <div class="bg-white rounded-full px-4 py-2 shadow-sm border border-slate-200">
                         <span class="text-sm font-semibold text-slate-600">記事数: </span>
                         <!-- articles変数の値でcountメソッドを実行 -->
@@ -174,7 +174,15 @@
                         </svg>
                         <span class="text-sm font-semibold text-slate-700">{{ auth()->user()->name }}</span>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST">
+                    <a href="{{ route('privacy') }}"
+                        class="text-sm font-semibold text-indigo-600 bg-white border border-indigo-100 px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-50 transition">
+                        プライバシーポリシー
+                    </a>
+                    <a href="{{ route('account.delete') }}"
+                        class="text-sm font-semibold text-red-500 bg-white border border-red-100 px-4 py-2 rounded-lg shadow-sm hover:bg-red-50 transition">
+                        アカウント削除
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm transition text-sm">
                             ログアウト

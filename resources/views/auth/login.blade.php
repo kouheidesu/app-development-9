@@ -97,6 +97,13 @@
                         新規登録
                     </a>
                 </p>
+                <p class="text-xs text-slate-500 mt-3">
+                    データの利用方針は
+                    <a href="{{ route('privacy') }}" class="underline text-indigo-600">
+                        プライバシーポリシー
+                    </a>
+                    をご確認ください。
+                </p>
             </div>
         </div>
     </div>

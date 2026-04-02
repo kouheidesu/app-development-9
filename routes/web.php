@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+
+Route::view('/privacy', 'pages.privacy')->name('privacy');
 
 // ゲスト用ルート（ログインしていない人のみアクセス可能）
 Route::middleware('guest')->group(function () {
@@ -19,6 +22,9 @@ Route::middleware('guest')->group(function () {
 
 // 認証必須ルート（ログインしている人のみアクセス可能）
 Route::middleware('auth')->group(function () {
+    Route::get('/account/delete', [AccountController::class, 'destroyConfirm'])->name('account.delete');
+    Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
+
     // /を叩くとArticleControllerクラスのindexメソッドを実行
     Route::get('/', [ArticleController::class, 'index'])->name('articles.index');
     // 記事一覧

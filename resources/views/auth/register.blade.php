@@ -93,6 +93,13 @@
                         ログイン
                     </a>
                 </p>
+                <p class="text-xs text-slate-500 mt-3">
+                    登録いただく情報の扱いについては
+                    <a href="{{ route('privacy') }}" class="underline text-indigo-600">
+                        プライバシーポリシー
+                    </a>
+                    をご覧ください。
+                </p>
             </div>
         </div>
     </div>
