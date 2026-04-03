@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/privacy', 'pages.privacy')->name('privacy');
+Route::view('/account/deletion-info', 'pages.account_deletion_info')->name('account.deletion.info');
 
 // ゲスト用ルート（ログインしていない人のみアクセス可能）
 Route::middleware('guest')->group(function () {
