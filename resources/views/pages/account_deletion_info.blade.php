@@ -13,7 +13,7 @@
         <header class="space-y-2">
             <p class="text-xs uppercase tracking-[0.5em] text-red-500">Account Deletion</p>
             <h1 class="text-3xl font-black text-slate-900">アカウント削除について</h1>
-            <p class="text-slate-600">こちらのページは Google Play 審査向けに削除手順・連絡先を案内する情報ページです。削除処理はアプリ内メニューで実行できます。</p>
+            <p class="text-slate-600">こちらのページはアプリ審査向けに削除手順・連絡先を案内する情報ページです。削除処理はアプリ内メニューで実行できます。</p>
         </header>
 
         <section class="bg-white border border-slate-200 rounded-3xl shadow-lg p-6 space-y-4">
